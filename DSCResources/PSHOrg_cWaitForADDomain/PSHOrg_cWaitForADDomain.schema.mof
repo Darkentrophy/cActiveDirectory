@@ -7,3 +7,4 @@ class PSHOrg_cWaitForADDomain : OMI_BaseResource
 	[Write] Uint32 RetryCount;
 };
 
+

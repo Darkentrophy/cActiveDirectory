@@ -7,3 +7,4 @@ class PSHOrg_cADDomain : OMI_BaseResource
 	[Required, EmbeddedInstance("MSFT_Credential")] String SafemodeAdministratorPassword;
 	[write,EmbeddedInstance("MSFT_Credential")] String DnsDelegationCredential;
 };
+

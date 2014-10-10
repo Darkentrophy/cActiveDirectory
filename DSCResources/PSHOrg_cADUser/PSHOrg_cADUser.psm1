@@ -218,3 +218,4 @@ function ValidateProperties
 }
 
 Export-ModuleMember -Function *-TargetResource
+
