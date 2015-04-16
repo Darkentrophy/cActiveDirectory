@@ -111,7 +111,7 @@ Function Test-TargetResource {
         ValidateProperties @PSBoundParameters    
     }
     catch {
-        Write-Error -Message "Error testing AD User $UserName in domain $DomainName. $_"
+        Write-Error -Message "Error testing AD group $GroupName in domain $DomainName. $_"
         throw $_
     }
 }
@@ -160,9 +160,7 @@ function ValidateProperties {
                 else {
                     return $($Ensure -eq 'Present')
                 }
-
             }
-            
         }
         
         if( $Ensure -eq 'Absent' ) {
