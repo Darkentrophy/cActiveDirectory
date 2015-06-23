@@ -1,18 +1,18 @@
 @{
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.1.0'
 
 # ID used to uniquely identify this module
 GUID = 'caedd141-8493-4af3-bda0-eef11e9ca2be'
 
 # Author of this module
-Author = 'Microsoft Corporation'
+Author = 'PowerShell.Org'
 
 # Company or vendor of this module
-CompanyName = 'Microsoft Corporation'
+CompanyName = 'PowerShell.Org'
 
 # Copyright statement for this module
-Copyright = '(c) 2013 Microsoft Corporation. All rights reserved.'
+Copyright = '(c) 2015 PowerShell.Org. All rights reserved.'
 
 # Description of the functionality provided by this module
 Description = 'Module with DSC Resources for Active Directory'
