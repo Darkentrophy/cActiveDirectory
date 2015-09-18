@@ -13,6 +13,8 @@ function Get-TargetResource
         
         [PSCredential]$Password,
 
+        [bool]$PasswordNeverExpires = $false,
+
         [ValidateSet("Present","Absent")]
         [string]$Ensure = "Present"                   
     )
@@ -58,6 +60,8 @@ function Set-TargetResource
 
         [PSCredential]$Password,
 
+        [bool]$PasswordNeverExpires = $false,
+
         [ValidateSet("Present","Absent")]
         [string]$Ensure = "Present"                    
     )
@@ -86,6 +90,8 @@ function Test-TargetResource
         [PSCredential]$DomainAdministratorCredential,
 
         [PSCredential]$Password,
+
+        [bool]$PasswordNeverExpires = $false,
 
         [ValidateSet("Present","Absent")]
         [string]$Ensure = "Present"          
@@ -117,6 +123,8 @@ function ValidateProperties
         [PSCredential]$DomainAdministratorCredential,
 
         [PSCredential]$Password,
+
+        [bool]$PasswordNeverExpires = $false,
 
         [ValidateSet("Present","Absent")]
         [string]$Ensure = "Present",          
@@ -201,7 +209,7 @@ function ValidateProperties
         {
             if( $Ensure -ne "Absent" )
             {
-                $params = @{ Name = $UserName; Enabled = $true; Credential = $DomainAdministratorCredential }
+                $params = @{ Name = $UserName; Enabled = $true; Credential = $DomainAdministratorCredential; PasswordNeverExpires = $PasswordNeverExpires }
                 if( $Password )
                 {
                     $params.Add( "AccountPassword", $Password.Password )

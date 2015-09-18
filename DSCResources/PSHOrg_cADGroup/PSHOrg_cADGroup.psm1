@@ -15,6 +15,8 @@ Function Get-TargetResource {
         [Parameter(Mandatory)]
         [string]$Path,
 
+        [string[]]$AccountMembers,
+
         [Parameter(Mandatory)]
         [PSCredential]$DomainAdministratorCredential,
         
@@ -24,6 +26,9 @@ Function Get-TargetResource {
     try {
         Write-Verbose -Message "Checking if the group $GroupName in domain $DomainName is present ..."
         $group = Get-ADGroup -Identity $GroupName -Credential $DomainAdministratorCredential
+        Write-Verbose -Message "Checking if the group members $AccountMembers are present..."
+        $grpmembers = (Get-ADGroup -Filter {samaccountname -eq $GroupName} | Get-ADGroupMember).samaccountname
+
         Write-Verbose -Message "Group $GroupName in domain $DomainName is present."
         $Ensure = 'Present' 
     }
@@ -40,6 +45,7 @@ Function Get-TargetResource {
     @{
         DomainName = $DomainName
         GroupName = $GroupName
+        GroupMembers = $grpmembers
         GroupCategory = $GroupCategory
         GroupScope =  $GroupScope
         Path = $Path
@@ -63,6 +69,8 @@ Function Set-TargetResource {
 
         [Parameter(Mandatory)]
         [string]$Path,
+
+        [string[]]$AccountMembers,
 
         [Parameter(Mandatory)]
         [PSCredential]$DomainAdministratorCredential,
@@ -98,6 +106,8 @@ Function Test-TargetResource {
 
         [Parameter(Mandatory)]
         [string]$Path,
+
+        [string[]]$AccountMembers,
 
         [Parameter(Mandatory)]
         [PSCredential]$DomainAdministratorCredential,
@@ -135,6 +145,8 @@ function ValidateProperties {
         [Parameter(Mandatory)]
         [string]$Path,
 
+        [string[]]$AccountMembers,
+
         [Parameter(Mandatory)]
         [PSCredential]$DomainAdministratorCredential,
 
@@ -144,9 +156,9 @@ function ValidateProperties {
         [Switch]$Apply
     )
 
-    $result = $true
-    # Check if group exists 
+    $returnvalue = $true
 
+    # Check if group exists 
     try {
         Write-Verbose -Message "Checking if the group $GroupName in domain $DomainName is present ..."
         $group = Get-ADGroup -Identity $GroupName -Credential $DomainAdministratorCredential
@@ -155,40 +167,74 @@ function ValidateProperties {
             Write-Verbose -Message "Group $GroupName in domain $DomainName is present."
             if(!$Apply) {
                 if( $Ensure -eq 'Absent' ) {
-                    return $false
-                }
-                else {
-                    return $($Ensure -eq 'Present')
+                    $returnvalue = $false
                 }
             }
         }
-        
         if( $Ensure -eq 'Absent' ) {
             if( $Apply ) {
                 Remove-ADGroup -Identity $GroupName -Credential $DomainAdministratorCredential -Confirm:$false
                 Write-Verbose "Group $GroupName in $Domain has been removed"
-                return $true
             }
             else {
-                return $false
+                $returnvalue = $false
             }
         }
     }
-    #Group not found
+    # Group not found
     catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] {
         Write-Verbose -Message "Group $GroupName account in domain $DomainName is NOT present"
         if($Apply) {
-
             if( $Ensure -ne 'Absent' ) {
                 $params = @{ Name = $GroupName; SamAccountName = $GroupName; GroupCategory = $GroupCategory; GroupScope = $GroupScope; Path = $Path; Credential = $DomainAdministratorCredential }
                 New-ADGRoup @params
                 Write-Verbose -Message "Group $GroupName account in domain $DomainName has been created"
-                #return $true
             }
         }
         else {
-            return $($Ensure -eq 'Absent')
+            if ($Ensure -ne 'Absent'){
+                $returnvalue = $false
+            }
         }
+    }
+
+    # check if member exists
+    try {
+        Foreach ($member in $AccountMembers){
+            if ((Get-ADGroup $GroupName | Get-ADGroupMember).samaccountname -contains $member){
+                Write-Verbose -Message "Useraccount $member in domain $DomainName IS present"
+                if( $Ensure -eq 'Absent' ) {
+                    if( $Apply ) {
+                        Get-ADGroup -Filter {samaccountname -eq $GroupName} | Remove-ADGroupMember -Members $member
+                        Write-Verbose -Message "Member $member has been removed from Group $GroupName in domain $DomainName."
+                    }
+                    else {
+                        $returnvalue = $false
+                    }
+                }
+            }
+            # Member not found
+            else {
+                if( $Ensure -eq 'Present' ) {
+                    if( $Apply ) {
+                        $domnuser = Get-ADUser -Filter {samaccountname -eq $member}
+                        $domgroup = Get-ADGroup -Filter {samaccountname -eq $GroupName}
+                        Add-ADGroupMember $domgroup –Member $domnuser
+                        Write-Verbose -Message "Member $member has been added to Group $GroupName in domain $DomainName."
+                    }
+                    else {
+                        $returnvalue = $false
+                    }
+                }
+            }
+        }
+    }
+    catch {
+        return $returnvalue
+    }
+
+    if(!$Apply ){
+        return $returnvalue
     }
 }
 
