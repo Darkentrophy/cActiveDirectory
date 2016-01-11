@@ -219,7 +219,7 @@ function ValidateProperties {
                     if( $Apply ) {
                         $domnuser = Get-ADUser -Filter {samaccountname -eq $member}
                         $domgroup = Get-ADGroup -Filter {samaccountname -eq $GroupName}
-                        Add-ADGroupMember $domgroup –Member $domnuser
+                        Add-ADGroupMember $domgroup -Members $domnuser
                         Write-Verbose -Message "Member $member has been added to Group $GroupName in domain $DomainName."
                     }
                     else {
